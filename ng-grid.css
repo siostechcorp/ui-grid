@@ -101,6 +101,37 @@
   height: 0;
   width: 0;
 }
+.ngSortButtonUpHBCGrid {
+  top: 51px;
+  left: 0;
+  right: 0;
+  margin-left: auto;
+  margin-right: auto;
+  border-color: gray transparent;
+  border-style: solid;
+  border-width: 5px 5px 0 5px;
+  height: 0;
+  width: 0;
+  position: absolute;
+}
+
+.ngSortButtonDownHBCGrid {
+  top: 51px;
+  left: 0;
+  right: 0;
+  margin-left: auto;
+  margin-right: auto;
+  border-color: gray transparent;
+  border-style: solid;
+  border-width: 0 5px 5px 5px;
+  height: 0;
+  width: 0;
+  position: absolute;
+}
+
+.ngHeaderSortColumn_HBCGrid{
+  overflow: hidden;
+}
 .ngHeaderScroller {
   position: absolute;
   background-color: inherit;
