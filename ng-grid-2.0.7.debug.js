@@ -1309,7 +1309,7 @@ var ngGrid = function ($scope, options, sortService, domUtilityService, $filter,
         groupsCollapsedByDefault: true,
         
         //The height of the header row in pixels.
-        headerRowHeight: undefined,
+        headerRowHeight: 30,
 
         //Define a header row template for further customization. See github wiki for more details.
         headerRowTemplate: undefined,
@@ -1354,7 +1354,7 @@ var ngGrid = function ($scope, options, sortService, domUtilityService, $filter,
         primaryKey: undefined,
 
         //Row height of rows in grid.
-        rowHeight: undefined,
+        rowHeight: 30,
         
         //Define a row template to customize output. See github wiki for more details.
         rowTemplate: undefined,
@@ -2221,7 +2221,7 @@ var ngRowFactory = function (grid, $scope, domUtilityService, $templateCache, $u
     self.parsedData = [];
     self.rowConfig = {};
     self.selectionProvider = $scope.selectionProvider;
-    self.rowHeight = undefined;
+    self.rowHeight = 30;
     self.numberOfAggregates = 0;
     self.groupedData = undefined;
     self.rowHeight = grid.config.rowHeight;
