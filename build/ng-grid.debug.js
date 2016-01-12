@@ -10,6 +10,7 @@
 var EXCESS_ROWS = 6;
 var SCROLL_THRESHOLD = 4;
 var ASC = "asc";
+
 // constant for sorting direction
 var DESC = "desc";
 // constant for sorting direction
@@ -22,6 +23,7 @@ var COL_FIELD = /COL_FIELD/g;
 var DISPLAY_CELL_TEMPLATE = /DISPLAY_CELL_TEMPLATE/g;
 var EDITABLE_CELL_TEMPLATE = /EDITABLE_CELL_TEMPLATE/g;
 var TEMPLATE_REGEXP = /<.+>/;
+var swipe;
 window.ngGrid = {};
 window.ngGrid.i18n = {};
 
@@ -826,6 +828,7 @@ var ngColumn = function (config, $scope, grid, domUtilityService, $templateCache
         }
     };
     self.gripOnMouseDown = function(event) {
+    	var ele = angular.element(event.target);
         $scope.isColumnResizing = true;
         if (event.ctrlKey && !self.pinned) {
             self.toggleVisible();
@@ -835,11 +838,17 @@ var ngColumn = function (config, $scope, grid, domUtilityService, $templateCache
         event.target.parentElement.style.cursor = 'col-resize';
         self.startMousePosition = event.clientX;
         self.origWidth = self.width;
+       
+        ele.bind('touchstart', function(evt) {
+				self.onTouchMove(ele);
+		});
+      
         $(document).mousemove(self.onMouseMove);
         $(document).mouseup(self.gripOnMouseUp);
         return false;
     };
     self.onMouseMove = function(event) {
+    	
         var diff = event.clientX - self.startMousePosition;
         var newWidth = diff + self.origWidth;
         self.width = (newWidth < self.minWidth ? self.minWidth : (newWidth > self.maxWidth ? self.maxWidth : newWidth));
@@ -847,8 +856,36 @@ var ngColumn = function (config, $scope, grid, domUtilityService, $templateCache
         domUtilityService.BuildStyles($scope, grid);
         return false;
     };
+    self.onTouchMove = function(ele){
+       var startElement,parent;
+       var $swipe = swipe;
+       $swipe.bind(ele, {
+        	'start' : function(coords) {
+				self.startMousePosition = coords.x;
+			},
+			'move' : function(coords) {
+				
+				var diff = coords.x - self.startMousePosition;
+				var newWidth = diff + self.origWidth; 
+				self.width = (newWidth < self.minWidth ? self.minWidth : (newWidth > self.maxWidth ? self.maxWidth : newWidth));
+				$scope.hasUserChangedGridColumnWidths = true;
+			    domUtilityService.BuildStyles($scope, grid);
+			    return false;
+				// ...
+			},
+			'end' : function(coords) {
+				// ...
+				
+			},
+			'cancel' : function(coords) {
+				// ...
+			}
+		});
+    };
     self.gripOnMouseUp = function (event) {
-        $(document).off('mousemove', self.onMouseMove);
+    	
+    	
+    	$(document).off('mousemove', self.onMouseMove);
         $(document).off('mouseup', self.gripOnMouseUp);
         event.target.parentElement.style.cursor = 'default';
         domUtilityService.digest($scope);
@@ -2674,14 +2711,13 @@ var ngSelectionProvider = function (grid, $scope, $parse) {
     self.lastClickedRow = undefined;
     self.ignoreSelectedItemChanges = false; // flag to prevent circular event loops keeping single-select var in sync
     self.pKeyParser = $parse(grid.config.primaryKey);
-
     // function to manage the selection action of a data item (entity)
     self.ChangeSelection = function (rowItem, evt) {
         // ctrl-click + shift-click multi-selections
         // up/down key navigation in multi-selections
         var charCode = evt.which || evt.keyCode;
         var isUpDownKeyPress = (charCode === 40 || charCode === 38);
-
+         
         if (evt && evt.shiftKey && !evt.keyCode && self.multi && grid.config.enableRowSelection) {
             if (self.lastClickedRow) {
                 var rowsArr;
@@ -3053,7 +3089,7 @@ ngGridDirectives.directive('ngGridMenu', ['$compile', '$templateCache', function
     };
     return ngGridMenu;
 }]);
-ngGridDirectives.directive('ngGrid', ['$compile', '$filter', '$templateCache', '$sortService', '$domUtilityService', '$utilityService', '$timeout', '$parse', '$http', '$q', function ($compile, $filter, $templateCache, sortService, domUtilityService, $utils, $timeout, $parse, $http, $q) {
+ngGridDirectives.directive('ngGrid', ['$compile', '$filter', '$templateCache', '$sortService', '$domUtilityService', '$utilityService', '$timeout', '$parse', '$http', '$q', 'GlobalState','$swipe', function ($compile, $filter, $templateCache, sortService, domUtilityService, $utils, $timeout, $parse, $http, $q,GlobalState,$swipe) {
     var ngGridDirective = {
         scope: true,
         compile: function() {
@@ -3191,6 +3227,7 @@ ngGridDirectives.directive('ngGrid', ['$compile', '$filter', '$templateCache', '
                         // the grid Id, entity, scope for convenience
                         options.gridId = grid.gridId;
                         options.ngGrid = grid;
+                        swipe = $swipe
                         options.$gridScope = $scope;
                         options.$gridServices = { SortService: sortService, DomUtilityService: domUtilityService, UtilityService: $utils };
                         $scope.$on('ngGridEventDigestGrid', function(){
