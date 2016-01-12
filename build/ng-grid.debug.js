@@ -297,9 +297,15 @@ angular.module('ngGrid.services').factory('$domUtilityService',['$utilityService
 
         for (var i = 0; i < cols.length; i++) {
             var col = cols[i];
-            if (col.visible !== false) {
+            if (col.visible !== false  && i < cols.length-1) {
                 css += "." + gridId + " .col" + i + " { width: " + col.width + "px; left: " + sumWidth + "px; height: " + rowHeight + "px }" +
                     "." + gridId + " .colt" + i + " { width: " + col.width + "px; }";
+                sumWidth += col.width;
+            }
+            // for removing horizontal scroll bar on grid during pin unpin 
+            else if(col.visible !== false){
+                css += "." + gridId + " .col" + i + " { width: " + (col.width-1) + "px; left: " + sumWidth + "px; height: " + rowHeight + "px }" +
+                    "." + gridId + " .colt" + i + " { width: " + (col.width-1) + "px; }";
                 sumWidth += col.width;
             }
         }
