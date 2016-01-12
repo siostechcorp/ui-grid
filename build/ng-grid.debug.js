@@ -303,7 +303,7 @@ angular.module('ngGrid.services').factory('$domUtilityService',['$utilityService
                 sumWidth += col.width;
             }
             // for removing horizontal scroll bar on grid during pin unpin 
-            else{
+            else if(col.visible !== false){
                 css += "." + gridId + " .col" + i + " { width: " + (col.width-1) + "px; left: " + sumWidth + "px; height: " + rowHeight + "px }" +
                     "." + gridId + " .colt" + i + " { width: " + (col.width-1) + "px; }";
                 sumWidth += col.width;
