@@ -213,7 +213,7 @@ angular.module('ngGrid.services').factory('$domUtilityService',['$utilityService
         $testContainer.appendTo('body');
         // 1. Run all the following measurements on startup!
         //measure Scroll Bars
-        $testContainer.height(100).width(100).css("position", "absolute").css("overflow", "scroll");
+        $testContainer.height(100).width(100).css("position", "absolute").css({'overflow':'scroll'});
         $testContainer.append('<div style="height: 400px; width: 400px;"></div>');
         domUtilityService.ScrollH = ($testContainer.height() - $testContainer[0].clientHeight);
         domUtilityService.ScrollW = ($testContainer.width() - $testContainer[0].clientWidth);
