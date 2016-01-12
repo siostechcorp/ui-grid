@@ -806,7 +806,8 @@ var ngColumn = function (config, $scope, grid, domUtilityService, $templateCache
         if (!self.sortable) {
             return true; // column sorting is disabled, do nothing
         }
-        var dir = self.sortDirection === ASC ? DESC : ASC;
+        //var dir = self.sortDirection === ASC ? DESC : ASC;
+		var dir = self.sortDirection === DESC ? ASC :  DESC;
         self.sortDirection = dir;
         config.sortCallback(self, evt);
         return false;
@@ -1309,7 +1310,7 @@ var ngGrid = function ($scope, options, sortService, domUtilityService, $filter,
         groupsCollapsedByDefault: true,
         
         //The height of the header row in pixels.
-        headerRowHeight: 40,
+        headerRowHeight: 30,
 
         //Define a header row template for further customization. See github wiki for more details.
         headerRowTemplate: undefined,
