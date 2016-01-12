@@ -1921,7 +1921,7 @@ var ngGrid = function ($scope, options, sortService, domUtilityService, $filter,
             }, true));
              $scope.$on('$destroy', $scope.$watch('columns', function (a) {
                 if(!$scope.isColumnResizing){
-                    domUtilityService.RebuildGrid($scope, self);
+                    //domUtilityService.RebuildGrid($scope, self);
                 }
                 $scope.$emit('ngGridEventColumns', a);
             }, true));
