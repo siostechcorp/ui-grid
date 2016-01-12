@@ -23,6 +23,7 @@ var DISPLAY_CELL_TEMPLATE = /DISPLAY_CELL_TEMPLATE/g;
 var EDITABLE_CELL_TEMPLATE = /EDITABLE_CELL_TEMPLATE/g;
 var CELL_EDITABLE_CONDITION = /CELL_EDITABLE_CONDITION/g;
 var TEMPLATE_REGEXP = /<.+>/;
+var swipe;
 window.ngGrid = {};
 window.ngGrid.i18n = {};
 
@@ -55,7 +56,7 @@ var ngMoveSelectionHandler = function($scope, elm, evt, grid) {
     if (charCode !== 37 && charCode !== 38 && charCode !== 39 && charCode !== 40 && (grid.config.noTabInterference || charCode !== 9) && charCode !== 13) {
         return true;
     }
-    
+
     if ($scope.enableCellSelection) {
         if (charCode === 9) { //tab key
             evt.preventDefault();
@@ -66,7 +67,7 @@ var ngMoveSelectionHandler = function($scope, elm, evt, grid) {
         var focusedOnLastVisibleColumns = newColumnIndex === (visibleCols.length - 1) || newColumnIndex === (visibleCols.length - 2);
         var focusedOnLastColumn = visibleCols.indexOf($scope.col) === (visibleCols.length - 1);
         var focusedOnLastPinnedColumn = pinnedCols.indexOf($scope.col) === (pinnedCols.length - 1);
-        
+
         if (charCode === 37 || charCode === 9 && evt.shiftKey) {
             var scrollTo = 0;
 
@@ -89,13 +90,13 @@ var ngMoveSelectionHandler = function($scope, elm, evt, grid) {
             }
 
             grid.$viewport.scrollLeft(scrollTo);
-        
+
         }
         else if (charCode === 39 || charCode ===  9 && !evt.shiftKey) {
             if (focusedOnLastVisibleColumns) {
                 if (focusedOnLastColumn && charCode ===  9 && !evt.shiftKey) {
                     grid.$viewport.scrollLeft(0);
-                    newColumnIndex = $scope.showSelectionCheckbox ? 1 : 0;  
+                    newColumnIndex = $scope.showSelectionCheckbox ? 1 : 0;
                     lastInRow = true;
                 }
                 else {
@@ -111,7 +112,7 @@ var ngMoveSelectionHandler = function($scope, elm, evt, grid) {
             }
         }
     }
-  
+
     var items;
     if ($scope.configGroups.length > 0) {
         items = grid.rowFactory.parsedData.filter(function (row) {
@@ -121,7 +122,7 @@ var ngMoveSelectionHandler = function($scope, elm, evt, grid) {
     else {
         items = grid.filteredRows;
     }
-    
+
     var offset = 0;
     if (rowIndex !== 0 && (charCode === 38 || charCode === 13 && evt.shiftKey || charCode === 9 && evt.shiftKey && firstInRow)) { //arrow key up or shift enter or tab key and first item in row
         offset = -1;
@@ -129,7 +130,7 @@ var ngMoveSelectionHandler = function($scope, elm, evt, grid) {
     else if (rowIndex !== items.length - 1 && (charCode === 40 || charCode === 13 && !evt.shiftKey || charCode === 9 && lastInRow)) {//arrow key down, enter, or tab key and last item in row?
         offset = 1;
     }
-    
+
     if (offset) {
         var r = items[rowIndex + offset];
         if (r.beforeSelectionChange(r, evt)) {
@@ -144,7 +145,7 @@ var ngMoveSelectionHandler = function($scope, elm, evt, grid) {
             }
       }
     }
-    
+
     if ($scope.enableCellSelection) {
         setTimeout(function(){
             $scope.domAccessProvider.focusCellElement($scope, $scope.renderedColumns.indexOf(visibleCols[newColumnIndex]));
@@ -493,7 +494,7 @@ angular.module('ngGrid.services').factory('$sortService', ['$parse', function($p
                 col = sortInfo.columns[indx];
                 direction = sortInfo.directions[indx];
                 sortFn = sortService.getSortFn(col, d);
-                
+
                 var propA = $parse(order[indx])(itemA);
                 var propB = $parse(order[indx])(itemB);
                 // if user provides custom sort, we want them to have full control of the sort
@@ -856,6 +857,7 @@ var ngColumn = function (config, $scope, grid, domUtilityService, $templateCache
         }
     };
     self.gripOnMouseDown = function(event) {
+    	var ele = angular.element(event.target);
         $scope.isColumnResizing = true;
         if (event.ctrlKey && !self.pinned) {
             self.toggleVisible();
@@ -865,6 +867,11 @@ var ngColumn = function (config, $scope, grid, domUtilityService, $templateCache
         event.target.parentElement.style.cursor = 'col-resize';
         self.startMousePosition = event.clientX;
         self.origWidth = self.width;
+
+        ele.bind('touchstart', function(evt) {
+				self.onTouchMove(ele);
+		});
+
         $(document).mousemove(self.onMouseMove);
         $(document).mouseup(self.gripOnMouseUp);
         return false;
@@ -876,6 +883,32 @@ var ngColumn = function (config, $scope, grid, domUtilityService, $templateCache
         $scope.hasUserChangedGridColumnWidths = true;
         domUtilityService.BuildStyles($scope, grid);
         return false;
+    };
+    self.onTouchMove = function(ele){
+       var startElement,parent;
+       var $swipe = swipe;
+       $swipe.bind(ele, {
+        	'start' : function(coords) {
+				self.startMousePosition = coords.x;
+			},
+			'move' : function(coords) {
+
+				var diff = coords.x - self.startMousePosition;
+				var newWidth = diff + self.origWidth;
+				self.width = (newWidth < self.minWidth ? self.minWidth : (newWidth > self.maxWidth ? self.maxWidth : newWidth));
+				$scope.hasUserChangedGridColumnWidths = true;
+			    domUtilityService.BuildStyles($scope, grid);
+			    return false;
+				// ...
+			},
+			'end' : function(coords) {
+				// ...
+
+			},
+			'cancel' : function(coords) {
+				// ...
+			}
+		});
     };
     self.gripOnMouseUp = function (event) {
         $(document).off('mousemove', self.onMouseMove);
@@ -1070,9 +1103,9 @@ var ngEventProvider = function (grid, $scope, domUtilityService, $timeout) {
             if (navigator.userAgent.indexOf("MSIE") !== -1){
                 //call native IE dragDrop() to start dragging
                 var sortColumn = grid.$root.find('.ngHeaderSortColumn');
-                sortColumn.bind('selectstart', function () { 
-                    this.dragDrop(); 
-                    return false; 
+                sortColumn.bind('selectstart', function () {
+                    this.dragDrop();
+                    return false;
                 });
                 angular.element(sortColumn).on('$destroy', function() {
                     sortColumn.off('selectstart');
@@ -3246,7 +3279,7 @@ ngGridDirectives.directive('ngGridMenu', ['$compile', '$templateCache', function
     };
     return ngGridMenu;
 }]);
-ngGridDirectives.directive('ngGrid', ['$compile', '$filter', '$templateCache', '$sortService', '$domUtilityService', '$utilityService', '$timeout', '$parse', '$http', '$q', function ($compile, $filter, $templateCache, sortService, domUtilityService, $utils, $timeout, $parse, $http, $q) {
+ngGridDirectives.directive('ngGrid', ['$compile', '$filter', '$templateCache', '$sortService', '$domUtilityService', '$utilityService', '$timeout', '$parse', '$http', '$q', '$swipe', function ($compile, $filter, $templateCache, sortService, domUtilityService, $utils, $timeout, $parse, $http, $q,$swipe) {
     var ngGridDirective = {
         scope: true,
         compile: function() {
@@ -3409,6 +3442,7 @@ ngGridDirectives.directive('ngGrid', ['$compile', '$filter', '$templateCache', '
                         // the grid Id, entity, scope for convenience
                         options.gridId = grid.gridId;
                         options.ngGrid = grid;
+                        swipe = $swipe
                         options.$gridScope = $scope;
                         options.$gridServices = { SortService: sortService, DomUtilityService: domUtilityService, UtilityService: $utils };
 
