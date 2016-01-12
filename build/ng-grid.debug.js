@@ -335,9 +335,15 @@ angular.module('ngGrid.services').factory('$domUtilityService',['$utilityService
 
         for (var i = 0; i < cols.length; i++) {
             var col = cols[i];
-            if (col.visible !== false) {
+            if (col.visible !== false  && i < cols.length-1) {
                 css += "." + gridId + " .col" + i + " { width: " + col.width + "px; left: " + sumWidth + "px; height: " + rowHeight + "px }" +
                     "." + gridId + " .colt" + i + " { width: " + col.width + "px; }";
+                sumWidth += col.width;
+            }
+            // for removing horizontal scroll bar on grid during pin unpin
+            else if(col.visible !== false){
+                css += "." + gridId + " .col" + i + " { width: " + (col.width-1) + "px; left: " + sumWidth + "px; height: " + rowHeight + "px }" +
+                    "." + gridId + " .colt" + i + " { width: " + (col.width-1) + "px; }";
                 sumWidth += col.width;
             }
         }
@@ -615,7 +621,7 @@ angular.module('ngGrid.services').factory('$utilityService', ['$parse', function
                         retnode.push(elem[i]);
                     }
                 }
-                return retnode;    
+                return retnode;
             }
         },
         newId: (function() {
@@ -742,7 +748,7 @@ var ngColumn = function (config, $scope, grid, domUtilityService, $templateCache
     // TODO: Use the column's definition for enabling cell editing
     // self.enableCellEdit = config.enableCellEdit || colDef.enableCellEdit;
     self.enableCellEdit = colDef.enableCellEdit !== undefined ? colDef.enableCellEdit : (config.enableCellEdit || config.enableCellEditOnFocus);
-    
+
     self.cellEditableCondition = colDef.cellEditableCondition || config.cellEditableCondition || 'true';
 
     self.headerRowHeight = config.headerRowHeight;
@@ -1103,7 +1109,7 @@ var ngEventProvider = function (grid, $scope, domUtilityService, $timeout) {
                         this.addEventListener('dragstart', self.dragStart); 
 
                         angular.element(this).on('$destroy', function() {
-                            this.removeEventListener('dragstart', self.dragStart); 
+                            this.removeEventListener('dragstart', self.dragStart);
                         });
                     }
                     if (navigator.userAgent.indexOf("MSIE") !== -1){
@@ -1257,7 +1263,7 @@ var ngFooter = function ($scope, grid) {
 
     $scope.multiSelect = (grid.config.enableRowSelection && grid.config.multiSelect);
     $scope.selectedItemCount = grid.selectedItemCount;
-    
+
     $scope.maxPages = function () {
         if($scope.maxRows() === 0) {
             return 1;
@@ -1398,7 +1404,7 @@ var ngGrid = function ($scope, options, sortService, domUtilityService, $filter,
         // the template for the column menu and filter, including the button.
         footerTemplate: undefined,
 
-        // Enables a trade off between refreshing the contents of the grid continuously while scrolling (behaviour when true) 
+        // Enables a trade off between refreshing the contents of the grid continuously while scrolling (behaviour when true)
         // and keeping the scroll bar button responsive at the expense of refreshing grid contents (behaviour when false)
         forceSyncScrolling: true,
 
@@ -1733,7 +1739,7 @@ var ngGrid = function ($scope, options, sortService, domUtilityService, $filter,
                     origIndex--;
                 }
                 indexMap[origIndex] = i;
-            } else if (ngCol.isAggCol && ngCol.visible){ // aggregate columns are 25px in length. 
+            } else if (ngCol.isAggCol && ngCol.visible){ // aggregate columns are 25px in length.
                 totalWidth+=25;
             }
         });
@@ -2610,14 +2616,14 @@ var ngSearchProvider = function ($scope, grid, $filter, $utils) {
 			for(var prop in value) {
 				arr = arr.concat(getAllPrimitiveValues(value[prop]));
 			}
-            
+
             return arr;
 		}
 		else {
 			return [value];
 		}
 	};
-	
+
     var searchEntireRow = function(condition, item, fieldMap){
         var result;
         for (var prop in item) {
@@ -3064,7 +3070,7 @@ ngGridDirectives.directive('ngCellHasFocus', ['$domUtilityService',
 
             elm.bind('mousedown', mousedown);
 
-            elm.bind('click', click); 
+            elm.bind('click', click);
 
             function focus (evt) {
                 isFocused = true;
@@ -3150,7 +3156,7 @@ ngGridDirectives.directive('ngCell', ['$compile', '$domUtilityService', function
                     var cellElement = $(html);
                     iElement.append(cellElement);
                     $compile(cellElement)($scope);
-					
+
                     if ($scope.enableCellSelection && cellElement[0].className.indexOf('ngSelectionCell') === -1) {
                         cellElement[0].setAttribute('tabindex', 0);
                         cellElement.addClass('ngCellElement');
@@ -3507,14 +3513,14 @@ ngGridDirectives.directive('ngInput', [function() {
 
                 return true;
             }
-            
+
             elm.bind('keydown', keydown);
 
             function click (evt) {
                 evt.stopPropagation();
             }
 
-            elm.bind('click', click); 
+            elm.bind('click', click);
 
             function mousedown (evt) {
                 evt.stopPropagation();
@@ -3594,7 +3600,7 @@ ngGridDirectives.directive('ngViewport', [function() {
                 ensureDigest();
             } else {
                 clearTimeout(scrollTimer);
-                scrollTimer = setTimeout(ensureDigest, 150);   
+                scrollTimer = setTimeout(ensureDigest, 150);
             }
             prevScollLeft = scrollLeft;
             prevScollTop = scrollTop;
