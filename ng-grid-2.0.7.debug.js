@@ -1354,7 +1354,7 @@ var ngGrid = function ($scope, options, sortService, domUtilityService, $filter,
         primaryKey: undefined,
 
         //Row height of rows in grid.
-        rowHeight: 30,
+        rowHeight: undefined,
         
         //Define a row template to customize output. See github wiki for more details.
         rowTemplate: undefined,
@@ -2221,7 +2221,7 @@ var ngRowFactory = function (grid, $scope, domUtilityService, $templateCache, $u
     self.parsedData = [];
     self.rowConfig = {};
     self.selectionProvider = $scope.selectionProvider;
-    self.rowHeight = 30;
+    self.rowHeight = undefined;
     self.numberOfAggregates = 0;
     self.groupedData = undefined;
     self.rowHeight = grid.config.rowHeight;
