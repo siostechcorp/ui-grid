@@ -831,7 +831,7 @@ var ngColumn = function (config, $scope, grid, domUtilityService, $templateCache
         if (!self.sortable) {
             return true; // column sorting is disabled, do nothing
         }
-        var dir = self.sortDirection === ASC ? DESC : ASC;
+        var dir = self.sortDirection === DESC ? ASC :  DESC; // To make default sorting by descending order
         self.sortDirection = dir;
         config.sortCallback(self, evt);
         return false;
