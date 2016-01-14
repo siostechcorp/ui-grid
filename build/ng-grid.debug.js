@@ -27,7 +27,7 @@ var FUNC_REGEXP = /(\([^)]*\))?$/;
 var DOT_REGEXP = /\./g;
 var APOS_REGEXP = /'/g;
 var BRACKET_REGEXP = /^(.*)((?:\s*\[\s*\d+\s*\]\s*)|(?:\s*\[\s*"(?:[^"\\]|\\.)*"\s*\]\s*)|(?:\s*\[\s*'(?:[^'\\]|\\.)*'\s*\]\s*))(.*)$/;
-
+var swipe;
 window.ngGrid = {};
 window.ngGrid.i18n = {};
 
@@ -884,6 +884,7 @@ var ngColumn = function (config, $scope, grid, domUtilityService, $templateCache
         }
     };
     self.gripOnMouseDown = function(event) {
+    	var ele = angular.element(event.target);
         $scope.isColumnResizing = true;
         if (event.ctrlKey && !self.pinned) {
             self.toggleVisible();
@@ -893,6 +894,11 @@ var ngColumn = function (config, $scope, grid, domUtilityService, $templateCache
         event.target.parentElement.style.cursor = 'col-resize';
         self.startMousePosition = event.clientX;
         self.origWidth = self.width;
+
+        ele.bind('touchstart', function(evt) {
+				self.onTouchMove(ele);
+		});
+
         $(document).mousemove(self.onMouseMove);
         $(document).mouseup(self.gripOnMouseUp);
         return false;
@@ -904,6 +910,32 @@ var ngColumn = function (config, $scope, grid, domUtilityService, $templateCache
         $scope.hasUserChangedGridColumnWidths = true;
         domUtilityService.BuildStyles($scope, grid);
         return false;
+    };
+    self.onTouchMove = function(ele){
+       var startElement,parent;
+       var $swipe = swipe;
+       $swipe.bind(ele, {
+        	'start' : function(coords) {
+				self.startMousePosition = coords.x;
+			},
+			'move' : function(coords) {
+
+				var diff = coords.x - self.startMousePosition;
+				var newWidth = diff + self.origWidth;
+				self.width = (newWidth < self.minWidth ? self.minWidth : (newWidth > self.maxWidth ? self.maxWidth : newWidth));
+				$scope.hasUserChangedGridColumnWidths = true;
+			    domUtilityService.BuildStyles($scope, grid);
+			    return false;
+				// ...
+			},
+			'end' : function(coords) {
+				// ...
+
+			},
+			'cancel' : function(coords) {
+				// ...
+			}
+		});
     };
     self.gripOnMouseUp = function (event) {
         $(document).off('mousemove', self.onMouseMove);
@@ -1099,9 +1131,9 @@ var ngEventProvider = function (grid, $scope, domUtilityService, $timeout) {
                 if (navigator.userAgent.indexOf("MSIE") !== -1){
                     //call native IE dragDrop() to start dragging
                     var sortColumn = grid.$root.find('.ngHeaderSortColumn');
-                    sortColumn.bind('selectstart', function () { 
-                        this.dragDrop(); 
-                        return false; 
+                    sortColumn.bind('selectstart', function () {
+                        this.dragDrop();
+                        return false;
                     });
                     angular.element(sortColumn).on('$destroy', function() {
                         sortColumn.off('selectstart');
@@ -3280,7 +3312,7 @@ ngGridDirectives.directive('ngGridMenu', ['$compile', '$templateCache', function
     };
     return ngGridMenu;
 }]);
-ngGridDirectives.directive('ngGrid', ['$compile', '$filter', '$templateCache', '$sortService', '$domUtilityService', '$utilityService', '$timeout', '$parse', '$http', '$q', function ($compile, $filter, $templateCache, sortService, domUtilityService, $utils, $timeout, $parse, $http, $q) {
+ngGridDirectives.directive('ngGrid', ['$compile', '$filter', '$templateCache', '$sortService', '$domUtilityService', '$utilityService', '$timeout', '$parse', '$http', '$q', '$swipe', function ($compile, $filter, $templateCache, sortService, domUtilityService, $utils, $timeout, $parse, $http, $q,$swipe) {
     var ngGridDirective = {
         scope: true,
         compile: function() {
@@ -3443,6 +3475,7 @@ ngGridDirectives.directive('ngGrid', ['$compile', '$filter', '$templateCache', '
                         // the grid Id, entity, scope for convenience
                         options.gridId = grid.gridId;
                         options.ngGrid = grid;
+                        swipe = $swipe
                         options.$gridScope = $scope;
                         options.$gridServices = { SortService: sortService, DomUtilityService: domUtilityService, UtilityService: $utils };
 
